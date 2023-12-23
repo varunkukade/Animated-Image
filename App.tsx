@@ -2,14 +2,17 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import {SafeAreaView, StatusBar, StyleSheet, View} from 'react-native';
 
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {ImageComponent} from './src/components/ImageComponent';
+import {isIos} from './src/helpers/constants';
 
 function App(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={Colors.darker} />
+      <StatusBar
+        barStyle={isIos() ? 'dark-content' : 'light-content'}
+        backgroundColor={'black'}
+      />
       <View style={styles.container}>
         <GestureHandlerRootView style={styles.ghRootView}>
           <ImageComponent />
