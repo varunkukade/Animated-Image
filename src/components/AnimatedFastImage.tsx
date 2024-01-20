@@ -1,88 +1,33 @@
-import React, {FC, ReactElement, useMemo} from 'react';
+import React, {FC, ReactElement} from 'react';
+import {View} from 'react-native';
 import FastImage, {FastImageProps} from 'react-native-fast-image';
-import {Gesture, GestureDetector} from 'react-native-gesture-handler';
+import {GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
+  interpolateColor,
+  useAnimatedProps,
   useAnimatedStyle,
-  useSharedValue,
-  withSpring,
 } from 'react-native-reanimated';
+import {styles} from './styles';
+import {
+  AnimatedFastImageComponent,
+  AnimatedTextInput,
+  MAX_SCALE,
+  MIN_SCALE,
+} from '../helpers/constants';
+import {useGesture} from '../hooks/useGesture';
 
-const AnimatedFastImageComponent: any = Animated.createAnimatedComponent(
-  FastImage as any,
-);
-
-const MAX_SCALE = 2;
-const MIN_SCALE = 1;
+Animated.addWhitelistedNativeProps({text: true});
 
 export const AnimatedFastImage: FC<FastImageProps> = ({
   resizeMode = FastImage.resizeMode.contain,
   style,
   ...props
 }): ReactElement => {
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const offset = useSharedValue({x: 0, y: 0});
-  const start = useSharedValue({x: 0, y: 0});
-
-  const pinchGesture = useMemo(
-    () =>
-      Gesture.Pinch()
-        .onUpdate(e => {
-          scale.value = savedScale.value * e.scale;
-        })
-        .onEnd(() => {
-          savedScale.value = scale.value;
-          if (savedScale.value < MIN_SCALE) {
-            //do not allow zooming out below original/min scale
-            scale.value = withSpring(MIN_SCALE, {
-              stiffness: 60,
-              overshootClamping: true,
-            });
-            savedScale.value = MIN_SCALE;
-          } else if (savedScale.value > MAX_SCALE) {
-            //do not allow zooming beyond max scale
-            scale.value = withSpring(MAX_SCALE, {
-              stiffness: 60,
-              overshootClamping: true,
-            });
-            savedScale.value = MAX_SCALE;
-          }
-        }),
-    [scale, savedScale],
-  );
-
-  const panGesture = useMemo(
-    () =>
-      Gesture.Pan()
-        .averageTouches(true)
-        .enabled(true)
-        .onUpdate(e => {
-          offset.value = {
-            x: e.translationX + start.value.x,
-            y: e.translationY + start.value.y,
-          };
-        })
-        .onEnd(() => {
-          //if user take off finger while moving image in x and y direction, take image to its original place.
-          offset.value = {
-            x: withSpring(0, {
-              stiffness: 60,
-              overshootClamping: true,
-            }),
-            y: withSpring(0, {
-              stiffness: 60,
-              overshootClamping: true,
-            }),
-          };
-          start.value = {
-            x: 0,
-            y: 0,
-          };
-        }),
-    [offset, start],
-  );
+  const {scale, offset, composedGesture, scaleTextDerived} = useGesture();
 
   const animatedStyle = useAnimatedStyle(() => ({
+    //change UI styles in UI thread.
+    //this callback will be directly converted to worklet
     transform: [
       {scale: scale.value},
       {translateX: offset.value.x},
@@ -90,15 +35,53 @@ export const AnimatedFastImage: FC<FastImageProps> = ({
     ],
   }));
 
-  const composed = Gesture.Simultaneous(pinchGesture, panGesture);
+  const scaleAnimatedProps = useAnimatedProps(() => {
+    //change text of scale in UI thread itself.
+    return {
+      text: scaleTextDerived.value,
+      defaultValue: scaleTextDerived.value,
+    };
+  });
+
+  const animatedBgColorStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: interpolateColor(
+        scale.value,
+        [MIN_SCALE, MAX_SCALE],
+        ['black', 'grey', 'white'],
+      ),
+    };
+  });
+
+  const animatedTextColorStyle = useAnimatedStyle(() => {
+    return {
+      color: interpolateColor(
+        scale.value,
+        [MIN_SCALE, MAX_SCALE],
+        ['white', 'black'],
+      ),
+    };
+  });
 
   return (
-    <GestureDetector gesture={composed}>
-      <AnimatedFastImageComponent
-        {...props}
-        style={[animatedStyle, style]}
-        resizeMode={resizeMode}
-      />
-    </GestureDetector>
+    <Animated.View style={[styles.container, animatedBgColorStyle]}>
+      <Animated.View style={styles.scaleTextContainer}>
+        <AnimatedTextInput
+          underlineColorAndroid="transparent"
+          editable={false}
+          style={[styles.scaleText, animatedTextColorStyle]}
+          animatedProps={scaleAnimatedProps}
+        />
+      </Animated.View>
+      <View style={styles.imageContainer}>
+        <GestureDetector gesture={composedGesture}>
+          <AnimatedFastImageComponent
+            {...props}
+            style={[animatedStyle, style]}
+            resizeMode={resizeMode}
+          />
+        </GestureDetector>
+      </View>
+    </Animated.View>
   );
 };
