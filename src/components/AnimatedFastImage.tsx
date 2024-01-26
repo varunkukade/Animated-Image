@@ -13,6 +13,7 @@ import {
   AnimatedTextInput,
   MAX_SCALE,
   MIN_SCALE,
+  images,
 } from '../helpers/constants';
 import {useGesture} from '../hooks/useGesture';
 
@@ -23,7 +24,8 @@ export const AnimatedFastImage: FC<FastImageProps> = ({
   style,
   ...props
 }): ReactElement => {
-  const {scale, offset, composedGesture, scaleTextDerived} = useGesture();
+  const {scale, offset, composedGesture, scaleTextDerived, currentImageId} =
+    useGesture();
 
   const animatedStyle = useAnimatedStyle(() => ({
     //change UI styles in UI thread.
@@ -63,6 +65,14 @@ export const AnimatedFastImage: FC<FastImageProps> = ({
     };
   });
 
+  const getOpacityStyle = (id: string) => {
+    return useAnimatedStyle(() => ({
+      //change UI styles in UI thread.
+      //this callback will be directly converted to worklet
+      opacity: id.toString() === currentImageId.value.toString() ? 1 : 0,
+    }));
+  };
+
   return (
     <Animated.View style={[styles.container, animatedBgColorStyle]}>
       <Animated.View style={styles.scaleTextContainer}>
@@ -73,6 +83,19 @@ export const AnimatedFastImage: FC<FastImageProps> = ({
           animatedProps={scaleAnimatedProps}
         />
       </Animated.View>
+      {Object.entries(images).map(eachItem => {
+        return (
+          <Animated.View
+            key={eachItem[0]?.toString()}
+            style={styles.image2Container}>
+            <AnimatedFastImageComponent
+              source={eachItem[1]}
+              resizeMode={'contain'}
+              style={[styles.image2, getOpacityStyle(eachItem[0])]}
+            />
+          </Animated.View>
+        );
+      })}
       <View style={styles.imageContainer}>
         <GestureDetector gesture={composedGesture}>
           <AnimatedFastImageComponent

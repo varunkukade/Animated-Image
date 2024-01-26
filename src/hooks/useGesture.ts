@@ -12,12 +12,33 @@ export const useGesture = () => {
   const savedScale = useSharedValue(1);
   const offset = useSharedValue({x: 0, y: 0});
   const start = useSharedValue({x: 0, y: 0});
+  const currentImageId = useSharedValue(1);
 
   const pinchGesture = useMemo(
     () =>
       Gesture.Pinch()
         .onUpdate(e => {
           scale.value = savedScale.value * e.scale;
+          if (scale.value < 1.5 || scale.value > 2.7) {
+            currentImageId.value = 1;
+          }
+          if (scale.value > 1.5 && scale.value < 1.7) {
+            currentImageId.value = 2;
+          } else if (scale.value > 1.7 && scale.value < 1.9) {
+            currentImageId.value = 3;
+          }
+          if (scale.value > 1.9 && scale.value < 2.1) {
+            currentImageId.value = 4;
+          }
+          if (scale.value > 2.1 && scale.value < 2.3) {
+            currentImageId.value = 5;
+          }
+          if (scale.value > 2.3 && scale.value < 2.5) {
+            currentImageId.value = 6;
+          }
+          if (scale.value > 2.5 && scale.value < 2.7) {
+            currentImageId.value = 7;
+          }
         })
         .onEnd(() => {
           savedScale.value = scale.value;
@@ -37,7 +58,7 @@ export const useGesture = () => {
             savedScale.value = MAX_SCALE;
           }
         }),
-    [scale, savedScale],
+    [scale, savedScale, currentImageId],
   );
 
   const panGesture = useMemo(
@@ -87,5 +108,6 @@ export const useGesture = () => {
     offset,
     composedGesture,
     scaleTextDerived,
+    currentImageId,
   };
 };

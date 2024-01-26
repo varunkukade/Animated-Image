@@ -16,4 +16,12 @@ export const styles = StyleSheet.create({
   imageContainer: {
     marginTop: 150,
   },
+  image2Container: {
+    height: 100,
+    width: 100,
+    alignSelf: 'center',
+    position: 'absolute',
+    top: 40,
+  },
+  image2: {height: '100%', width: '100%'},
 });
