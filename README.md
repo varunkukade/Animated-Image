@@ -1,2 +1,3 @@
-Demo - [https://github.com/varunkukade/Animated-Image/assets/66090579/1e58b4d3-f823-45a7-80ea-fa2333e4626d](https://cdn-images-1.medium.com/max/1600/1*oBRXo08Li2GKpQTBE1HlsA.gif)https://cdn-images-1.medium.com/max/1600/1*oBRXo08Li2GKpQTBE1HlsA.gif
+https://medium.com/@varunkukade999/animated-image-component-in-react-native-9d7c36efc3e0
+https://medium.com/@varunkukade999/how-to-update-styles-texts-colors-and-images-directly-on-the-ui-thread-60fps-using-rn-7f90da00f605
 
